@@ -2,6 +2,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
 import { MANAGED_POLICIES, STAGES } from './commonConstants';
+import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 
 export const createDefaultVpc = (
   vpcId: string,
@@ -41,7 +42,19 @@ export const createDefaultSecurityGroup = (
     allowAllOutbound: true,
   });
 };
+export const addIngressRule = (
+  securityGroup: ec2.SecurityGroup,
+  port: ec2.Port,
+  description: string
+) => {
+  securityGroup.addIngressRule(ec2.Peer.anyIpv4(), port, description);
+};
 
+export const createUserData = (commands: string[]): ec2.UserData => {
+  const userData = ec2.UserData.forLinux();
+  userData.addCommands(...commands);
+  return userData;
+};
 export const createDefaultEc2Instance = (
   ec2InstanceId: string,
   ec2InstanceName: string,
@@ -90,4 +103,34 @@ export const attachSSMPolicyToEC2Instance = (instance: ec2.Instance) => {
     instance.role,
     MANAGED_POLICIES.SSM_MANAGED_INSTANCE_CORE
   );
+};
+
+export const createAutoScalingGroup = (
+  asgId: string,
+  vpc: ec2.IVpc,
+  instanceType: ec2.InstanceType,
+  machineImage: ec2.IMachineImage,
+  userData: ec2.UserData,
+  minCapacity: number,
+  maxCapacity: number,
+  desiredCapacity: number,
+  subnetType: ec2.SubnetType,
+  securityGroup: ec2.SecurityGroup,
+  keyName: string,
+  stage: STAGES,
+  construct: Construct
+): autoscaling.AutoScalingGroup => {
+  return new autoscaling.AutoScalingGroup(construct, `${asgId}-${stage}`, {
+    vpc,
+    instanceType,
+    machineImage,
+    userData,
+    minCapacity,
+    maxCapacity,
+    desiredCapacity,
+    vpcSubnets: { subnetType },
+    securityGroup,
+    keyName,
+    associatePublicIpAddress: true,
+  });
 };

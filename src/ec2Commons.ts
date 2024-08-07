@@ -1,8 +1,32 @@
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
-import { MANAGED_POLICIES, STAGES } from './commonConstants';
+import {
+  MANAGED_POLICIES,
+  STAGES,
+  DEFAULT_ASG_INSTANCE_TYPE,
+  DEFAULT_ASG_MACHINE_IMAGE,
+  DEFAULT_ASG_MIN_CAPACITY,
+  DEFAULT_ASG_MAX_CAPACITY,
+  DEFAULT_ASG_DESIRED_CAPACITY,
+  DEFAULT_ASG_SUBNET_TYPE,
+} from './commonConstants';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+
+export interface AutoScalingGroupProps {
+  asgName: string;
+  vpc: ec2.IVpc;
+  stage: STAGES;
+  instanceType?: ec2.InstanceType;
+  machineImage?: ec2.IMachineImage;
+  userData?: ec2.UserData;
+  minCapacity?: number;
+  maxCapacity?: number;
+  desiredCapacity?: number;
+  subnetType?: ec2.SubnetType;
+  securityGroup?: ec2.SecurityGroup;
+  keyName?: string;
+}
 
 export const createDefaultVpc = (
   vpcId: string,
@@ -105,32 +129,26 @@ export const attachSSMPolicyToEC2Instance = (instance: ec2.Instance) => {
   );
 };
 
-export const createAutoScalingGroup = (
-  asgId: string,
-  vpc: ec2.IVpc,
-  instanceType: ec2.InstanceType,
-  machineImage: ec2.IMachineImage,
-  userData: ec2.UserData,
-  minCapacity: number,
-  maxCapacity: number,
-  desiredCapacity: number,
-  subnetType: ec2.SubnetType,
-  securityGroup: ec2.SecurityGroup,
-  keyName: string,
-  stage: STAGES,
-  construct: Construct
+export const createDefaultAutoScalingGroup = (
+  construct: Construct,
+  props: AutoScalingGroupProps
 ): autoscaling.AutoScalingGroup => {
-  return new autoscaling.AutoScalingGroup(construct, `${asgId}-${stage}`, {
-    vpc,
-    instanceType,
-    machineImage,
-    userData,
-    minCapacity,
-    maxCapacity,
-    desiredCapacity,
-    vpcSubnets: { subnetType },
-    securityGroup,
-    keyName,
-    associatePublicIpAddress: true,
-  });
+  return new autoscaling.AutoScalingGroup(
+    construct,
+    `${props.asgName}-${props.stage}`,
+    {
+      autoScalingGroupName: `${props.asgName}-${props.stage}`,
+      vpc: props.vpc,
+      instanceType: props.instanceType || DEFAULT_ASG_INSTANCE_TYPE,
+      machineImage: props.machineImage || DEFAULT_ASG_MACHINE_IMAGE,
+      userData: props.userData,
+      minCapacity: props.minCapacity ?? DEFAULT_ASG_MIN_CAPACITY,
+      maxCapacity: props.maxCapacity ?? DEFAULT_ASG_MAX_CAPACITY,
+      desiredCapacity: props.desiredCapacity ?? DEFAULT_ASG_DESIRED_CAPACITY,
+      vpcSubnets: { subnetType: props.subnetType || DEFAULT_ASG_SUBNET_TYPE },
+      securityGroup: props.securityGroup,
+      keyName: props.keyName,
+      associatePublicIpAddress: props.subnetType === ec2.SubnetType.PUBLIC,
+    }
+  );
 };

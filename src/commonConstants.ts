@@ -1,6 +1,12 @@
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as cdk from 'aws-cdk-lib';
+import {
+  InstanceType,
+  InstanceClass,
+  InstanceSize,
+  MachineImage,
+  SubnetType,
+} from 'aws-cdk-lib/aws-ec2';
+import { ApplicationLoadBalancerProps } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 
 export const ALLOWED_HTTP_PORT: number = 80;
 export const ALLOWED_HTTPS_PORT: number = 443;
@@ -21,6 +27,7 @@ export enum HTTP_METHODS {
   HEAD = 'HEAD',
   OPTIONS = 'OPTIONS',
 }
+
 export enum HTTP_STATUS_CODES {
   OK = '200',
   Created = '201',
@@ -57,26 +64,30 @@ export enum LAMBDA_MEMORY {
   LAMBDA_MEMORY_MAX = 256,
 }
 
-export const DEFAULT_ASG_INSTANCE_TYPE = ec2.InstanceType.of(
-  ec2.InstanceClass.T3,
-  ec2.InstanceSize.MICRO
+export const DEFAULT_ASG_INSTANCE_TYPE = InstanceType.of(
+  InstanceClass.T3,
+  InstanceSize.MICRO
 );
-export const DEFAULT_ASG_MACHINE_IMAGE = ec2.MachineImage.latestAmazonLinux2();
+//We are using the Canonical's AWS account ID for official Ubuntu AMI's
+export const DEFAULT_ASG_MACHINE_IMAGE = MachineImage.lookup({
+  name: 'ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*',
+  owners: ['099720109477'],
+});
 export const DEFAULT_ASG_MIN_CAPACITY = 1;
 export const DEFAULT_ASG_MAX_CAPACITY = 2;
 export const DEFAULT_ASG_DESIRED_CAPACITY = 1;
-export const DEFAULT_ASG_SUBNET_TYPE = ec2.SubnetType.PRIVATE_WITH_NAT;
+export const DEFAULT_ASG_SUBNET_TYPE = SubnetType.PRIVATE_WITH_NAT;
 
-export const DEFAULT_LB_SCHEME: elbv2.ApplicationLoadBalancerProps['internetFacing'] =
+export const DEFAULT_LB_SCHEME: ApplicationLoadBalancerProps['internetFacing'] =
   true;
 export const DEFAULT_LB_LISTENER_PORT = 80;
 export const DEFAULT_TARGET_PORT = 80;
 export const DEFAULT_HEALTH_CHECK_PATH = '/';
 export const DEFAULT_UNHEALTHY_THRESHOLD_COUNT = 2;
 export const DEFAULT_HEALTHY_THRESHOLD_COUNT = 5;
-export const DEFAULT_HEALTH_CHECK_INTERVAL = cdk.Duration.seconds(30);
-export const DEFAULT_HEALTH_CHECK_TIMEOUT = cdk.Duration.seconds(5);
+export const DEFAULT_HEALTH_CHECK_INTERVAL = Duration.seconds(30);
+export const DEFAULT_HEALTH_CHECK_TIMEOUT = Duration.seconds(5);
 
-export const DEFAULT_S3_REMOVAL_POLICY = cdk.RemovalPolicy.RETAIN;
+export const DEFAULT_S3_REMOVAL_POLICY = RemovalPolicy.RETAIN;
 export const DEFAULT_S3_AUTO_DELETE_OBJECTS = false;
 export const DEFAULT_S3_DESTINATION_KEY_PREFIX = '';

@@ -60,12 +60,11 @@ export const createIAMPolicy = (
 
 export const createIAMRole = (
   roleName: string,
-  roleId: string,
   servicePrincipal: iam.ServicePrincipal,
   stage: STAGES,
   construct: Construct
 ): iam.Role => {
-  return new iam.Role(construct, `${roleId}-${stage}`, {
+  return new iam.Role(construct, `${roleName}-${stage}`, {
     roleName: `${roleName}-${stage}`,
     assumedBy: servicePrincipal,
   });

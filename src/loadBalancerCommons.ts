@@ -1,6 +1,11 @@
-import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+import {
+  ApplicationLoadBalancer,
+  ApplicationListener,
+  ApplicationTargetGroup,
+  ListenerAction,
+} from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { IVpc } from 'aws-cdk-lib/aws-ec2';
+import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
 import { Construct } from 'constructs';
 import {
   STAGES,
@@ -16,13 +21,13 @@ import {
 export interface TargetGroupProps {
   name: string;
   port: number;
-  targets: autoscaling.AutoScalingGroup[];
+  targets: AutoScalingGroup[];
   healthCheckPath?: string;
 }
 
 export interface LoadBalancerProps {
   lbName: string;
-  vpc: ec2.IVpc;
+  vpc: IVpc;
   stage: STAGES;
   internetFacing?: boolean;
   listenerPort?: number;
@@ -33,12 +38,12 @@ export const createLoadBalancerWithTargets = (
   construct: Construct,
   props: LoadBalancerProps
 ): {
-  loadBalancer: elbv2.ApplicationLoadBalancer;
-  listener: elbv2.ApplicationListener;
-  targetGroups: elbv2.ApplicationTargetGroup[];
+  loadBalancer: ApplicationLoadBalancer;
+  listener: ApplicationListener;
+  targetGroups: ApplicationTargetGroup[];
 } => {
   // Create Load Balancer
-  const lb = new elbv2.ApplicationLoadBalancer(
+  const lb = new ApplicationLoadBalancer(
     construct,
     `${props.lbName}-${props.stage}`,
     {
@@ -72,10 +77,9 @@ export const createLoadBalancerWithTargets = (
   // Set the first target group as the default action for the listener
   if (targetGroups.length > 0) {
     listener.addAction('DefaultAction', {
-      action: elbv2.ListenerAction.forward([targetGroups[0]]),
+      action: ListenerAction.forward([targetGroups[0]]),
     });
   }
 
   return { loadBalancer: lb, listener, targetGroups };
-
 };

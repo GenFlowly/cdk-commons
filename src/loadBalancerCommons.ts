@@ -77,4 +77,5 @@ export const createLoadBalancerWithTargets = (
   }
 
   return { loadBalancer: lb, listener, targetGroups };
+
 };

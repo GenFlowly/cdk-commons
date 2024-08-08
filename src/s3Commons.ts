@@ -34,6 +34,7 @@ export const createS3Bucket = (
     removalPolicy: props.removalPolicy ?? DEFAULT_S3_REMOVAL_POLICY,
     autoDeleteObjects:
       props.autoDeleteObjects ?? DEFAULT_S3_AUTO_DELETE_OBJECTS,
+
   });
 };
 
@@ -51,6 +52,7 @@ export const deployToS3Bucket = (
         props.destinationKeyPrefix ?? DEFAULT_S3_DESTINATION_KEY_PREFIX,
     }
   );
+  
 };
 
 export const grantS3ReadAccess = (

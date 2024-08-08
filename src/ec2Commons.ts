@@ -181,4 +181,6 @@ export const createDefaultAutoScalingGroup = (
       associatePublicIpAddress: props.subnetType === ec2.SubnetType.PUBLIC,
     }
   );
+
+
 };

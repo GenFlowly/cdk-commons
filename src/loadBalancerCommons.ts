@@ -6,7 +6,6 @@ import {
   STAGES,
   DEFAULT_LB_SCHEME,
   DEFAULT_LB_LISTENER_PORT,
-  DEFAULT_TARGET_PORT,
   DEFAULT_HEALTH_CHECK_PATH,
   DEFAULT_UNHEALTHY_THRESHOLD_COUNT,
   DEFAULT_HEALTHY_THRESHOLD_COUNT,
@@ -14,53 +13,68 @@ import {
   DEFAULT_HEALTH_CHECK_TIMEOUT,
 } from './commonConstants';
 
+export interface TargetGroupProps {
+  name: string;
+  port: number;
+  targets: autoscaling.AutoScalingGroup[];
+  healthCheckPath?: string;
+}
+
 export interface LoadBalancerProps {
   lbName: string;
   vpc: ec2.IVpc;
   stage: STAGES;
   internetFacing?: boolean;
   listenerPort?: number;
-  targetPort?: number;
-  healthCheckPath?: string;
-  targets: autoscaling.AutoScalingGroup[];
+  targetGroups: TargetGroupProps[];
 }
 
-export const createDefaultLoadBalancerWithTargets = (
+export const createLoadBalancerWithTargets = (
   construct: Construct,
   props: LoadBalancerProps
 ): {
   loadBalancer: elbv2.ApplicationLoadBalancer;
   listener: elbv2.ApplicationListener;
-  targetGroup: elbv2.ApplicationTargetGroup;
+  targetGroups: elbv2.ApplicationTargetGroup[];
 } => {
+  // Create Load Balancer
   const lb = new elbv2.ApplicationLoadBalancer(
     construct,
     `${props.lbName}-${props.stage}`,
     {
       vpc: props.vpc,
       internetFacing: props.internetFacing ?? DEFAULT_LB_SCHEME,
-      loadBalancerName: `${props.lbName}-${props.stage}`,
+      loadBalancerName: `${props.lbName}-${props.stage}`.toLowerCase(),
     }
   );
 
+  // Add Listener
   const listener = lb.addListener(`${props.lbName}Listener-${props.stage}`, {
     port: props.listenerPort ?? DEFAULT_LB_LISTENER_PORT,
   });
 
-  const targetGroup = listener.addTargets(
-    `${props.lbName}TargetGroup-${props.stage}`,
-    {
-      port: props.targetPort ?? DEFAULT_TARGET_PORT,
-      targets: props.targets,
+  // Create Target Groups
+  const targetGroups = props.targetGroups.map((tg) => {
+    return listener.addTargets(`${tg.name}-${props.stage}`, {
+      port: tg.port,
+      targets: tg.targets,
+      targetGroupName: `${tg.name}-${props.stage}`.toLowerCase(),
       healthCheck: {
-        path: props.healthCheckPath ?? DEFAULT_HEALTH_CHECK_PATH,
+        path: tg.healthCheckPath ?? DEFAULT_HEALTH_CHECK_PATH,
         unhealthyThresholdCount: DEFAULT_UNHEALTHY_THRESHOLD_COUNT,
         healthyThresholdCount: DEFAULT_HEALTHY_THRESHOLD_COUNT,
         interval: DEFAULT_HEALTH_CHECK_INTERVAL,
         timeout: DEFAULT_HEALTH_CHECK_TIMEOUT,
       },
-    }
-  );
+    });
+  });
 
-  return { loadBalancer: lb, listener, targetGroup };
+  // Set the first target group as the default action for the listener
+  if (targetGroups.length > 0) {
+    listener.addAction('DefaultAction', {
+      action: elbv2.ListenerAction.forward([targetGroups[0]]),
+    });
+  }
+
+  return { loadBalancer: lb, listener, targetGroups };
 };

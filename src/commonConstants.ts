@@ -63,7 +63,7 @@ export const DEFAULT_ASG_INSTANCE_TYPE = ec2.InstanceType.of(
 );
 export const DEFAULT_ASG_MACHINE_IMAGE = ec2.MachineImage.latestAmazonLinux2();
 export const DEFAULT_ASG_MIN_CAPACITY = 1;
-export const DEFAULT_ASG_MAX_CAPACITY = 3;
+export const DEFAULT_ASG_MAX_CAPACITY = 2;
 export const DEFAULT_ASG_DESIRED_CAPACITY = 1;
 export const DEFAULT_ASG_SUBNET_TYPE = ec2.SubnetType.PRIVATE_WITH_NAT;
 

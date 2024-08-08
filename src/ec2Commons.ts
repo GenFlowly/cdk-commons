@@ -1,4 +1,6 @@
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as kms from 'aws-cdk-lib/aws-kms';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
 import {
@@ -128,11 +130,39 @@ export const attachSSMPolicyToEC2Instance = (instance: ec2.Instance) => {
     MANAGED_POLICIES.SSM_MANAGED_INSTANCE_CORE
   );
 };
+export const createEC2KeyPair = (
+  construct: Construct,
+  keyPairName: string,
+  stage: STAGES
+): string => {
+  const key = new kms.Key(construct, `${keyPairName}Key-${stage}`, {
+    enableKeyRotation: true,
+  });
 
+  const keyPair = new ec2.CfnKeyPair(construct, `${keyPairName}-${stage}`, {
+    keyName: `${keyPairName}-${stage}`,
+  });
+
+  new secretsmanager.Secret(construct, `${keyPairName}Secret-${stage}`, {
+    secretName: `ec2-ssh-key/${keyPairName}-${stage}`,
+    description: 'SSH key for EC2 instances',
+    encryptionKey: key,
+    generateSecretString: {
+      secretStringTemplate: JSON.stringify({ keyPairName: keyPair.keyName }),
+      generateStringKey: 'privateKey',
+      excludeCharacters: '/"',
+    },
+  });
+
+  return keyPair.keyName;
+};
 export const createDefaultAutoScalingGroup = (
   construct: Construct,
   props: AutoScalingGroupProps
 ): autoscaling.AutoScalingGroup => {
+  const keyName =
+    props.keyName ?? createEC2KeyPair(construct, props.asgName, props.stage);
+
   return new autoscaling.AutoScalingGroup(
     construct,
     `${props.asgName}-${props.stage}`,
@@ -147,7 +177,7 @@ export const createDefaultAutoScalingGroup = (
       desiredCapacity: props.desiredCapacity ?? DEFAULT_ASG_DESIRED_CAPACITY,
       vpcSubnets: { subnetType: props.subnetType || DEFAULT_ASG_SUBNET_TYPE },
       securityGroup: props.securityGroup,
-      keyName: props.keyName,
+      keyName: keyName,
       associatePublicIpAddress: props.subnetType === ec2.SubnetType.PUBLIC,
     }
   );

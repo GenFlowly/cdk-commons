@@ -1,8 +1,49 @@
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import {
+  IVpc,
+  InstanceType,
+  IMachineImage,
+  UserData,
+  SubnetType,
+  SecurityGroup,
+  Vpc,
+  Port,
+  Peer,
+  Instance,
+  GenericLinuxImage,
+  CfnEIP,
+  CfnEIPAssociation,
+  CfnKeyPair,
+} from 'aws-cdk-lib/aws-ec2';
+import { Key } from 'aws-cdk-lib/aws-kms';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
-import { MANAGED_POLICIES, STAGES } from './commonConstants';
-import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+import {
+  MANAGED_POLICIES,
+  STAGES,
+  DEFAULT_ASG_INSTANCE_TYPE,
+  DEFAULT_ASG_MACHINE_IMAGE,
+  DEFAULT_ASG_MIN_CAPACITY,
+  DEFAULT_ASG_MAX_CAPACITY,
+  DEFAULT_ASG_DESIRED_CAPACITY,
+  DEFAULT_ASG_SUBNET_TYPE,
+} from './commonConstants';
+import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
+
+export interface AutoScalingGroupProps {
+  asgName: string;
+  vpc: IVpc;
+  stage: STAGES;
+  instanceType?: InstanceType;
+  machineImage?: IMachineImage;
+  userData?: UserData;
+  minCapacity?: number;
+  maxCapacity?: number;
+  desiredCapacity?: number;
+  subnetType?: SubnetType;
+  securityGroup?: SecurityGroup;
+  keyName?: string;
+}
 
 export const createDefaultVpc = (
   vpcId: string,
@@ -11,16 +52,16 @@ export const createDefaultVpc = (
   construct: Construct,
   stage: STAGES,
   isPublic: boolean = true
-): ec2.Vpc => {
-  return new ec2.Vpc(construct, `${vpcId}`, {
+): Vpc => {
+  return new Vpc(construct, `${vpcId}`, {
     vpcName: `${vpcName}-${stage}`,
     maxAzs: maxAzs,
     subnetConfiguration: [
       {
         name: `${vpcName}-${stage}-SubnetConfig`,
         subnetType: isPublic
-          ? ec2.SubnetType.PUBLIC
-          : ec2.SubnetType.PRIVATE_WITH_EGRESS,
+          ? SubnetType.PUBLIC
+          : SubnetType.PRIVATE_WITH_EGRESS,
         // This determines whether EC2 instance will have access to public internet or not
       },
     ],
@@ -28,14 +69,13 @@ export const createDefaultVpc = (
 };
 
 export const createDefaultSecurityGroup = (
-  securityGroupId: string,
   securityGroupName: string,
-  vpc: ec2.Vpc,
+  vpc: Vpc,
   securityGroupDescription: string,
   stage: STAGES,
   construct: Construct
-): ec2.SecurityGroup => {
-  return new ec2.SecurityGroup(construct, `${securityGroupId}`, {
+): SecurityGroup => {
+  return new SecurityGroup(construct, `${securityGroupName}-${stage}`, {
     securityGroupName: `${securityGroupName}-${stage}`,
     vpc: vpc,
     description: securityGroupDescription,
@@ -43,36 +83,35 @@ export const createDefaultSecurityGroup = (
   });
 };
 export const addIngressRule = (
-  securityGroup: ec2.SecurityGroup,
-  port: ec2.Port,
+  securityGroup: SecurityGroup,
+  port: Port,
   description: string
 ) => {
-  securityGroup.addIngressRule(ec2.Peer.anyIpv4(), port, description);
+  securityGroup.addIngressRule(Peer.anyIpv4(), port, description);
 };
 
-export const createUserData = (commands: string[]): ec2.UserData => {
-  const userData = ec2.UserData.forLinux();
+export const createUserData = (commands: string[]): UserData => {
+  const userData = UserData.forLinux();
   userData.addCommands(...commands);
   return userData;
 };
 export const createDefaultEc2Instance = (
-  ec2InstanceId: string,
   ec2InstanceName: string,
   instanceType: string,
   machineImage: string,
-  vpc: ec2.Vpc,
-  securityGroup: ec2.SecurityGroup,
+  vpc: Vpc,
+  securityGroup: SecurityGroup,
   userDataContent: string,
   region: string,
   stage: STAGES,
   construct: Construct
-): ec2.Instance => {
-  const genericLinuxImage = new ec2.GenericLinuxImage({
+): Instance => {
+  const genericLinuxImage = new GenericLinuxImage({
     [region]: machineImage,
   });
-  const userDataScript = ec2.UserData.custom(userDataContent);
-  return new ec2.Instance(construct, `${ec2InstanceId}-${stage}`, {
-    instanceType: new ec2.InstanceType(instanceType),
+  const userDataScript = UserData.custom(userDataContent);
+  return new Instance(construct, `${ec2InstanceName}-${stage}`, {
+    instanceType: new InstanceType(instanceType),
     instanceName: `${ec2InstanceName}-${stage}`,
     machineImage: genericLinuxImage,
     vpc: vpc,
@@ -83,12 +122,12 @@ export const createDefaultEc2Instance = (
 
 export const createAndAssignDefaultElasticIp = (
   eipName: string,
-  ec2Instance: ec2.Instance,
+  ec2Instance: Instance,
   stage: STAGES,
   construct: Construct
 ) => {
-  const eip = new ec2.CfnEIP(construct, `${eipName}`);
-  new ec2.CfnEIPAssociation(construct, `${eipName}-${stage}-EIPAssociation`, {
+  const eip = new CfnEIP(construct, `${eipName}`);
+  new CfnEIPAssociation(construct, `${eipName}-${stage}-EIPAssociation`, {
     eip: eip.ref,
     instanceId: ec2Instance.instanceId,
   });
@@ -98,39 +137,57 @@ export const createAndAssignDefaultElasticIp = (
  * Method to allow ssh into EC2 instances by attaching Session Manager Policy
  * @param instance
  */
-export const attachSSMPolicyToEC2Instance = (instance: ec2.Instance) => {
+export const attachSSMPolicyToEC2Instance = (instance: Instance) => {
   attachManagedPolicyToRole(
     instance.role,
     MANAGED_POLICIES.SSM_MANAGED_INSTANCE_CORE
   );
 };
+export const createEC2KeyPair = (
+  construct: Construct,
+  keyPairName: string,
+  stage: STAGES
+): string => {
+  const key = new Key(construct, `${keyPairName}Key-${stage}`, {
+    enableKeyRotation: true,
+  });
 
-export const createAutoScalingGroup = (
-  asgId: string,
-  vpc: ec2.IVpc,
-  instanceType: ec2.InstanceType,
-  machineImage: ec2.IMachineImage,
-  userData: ec2.UserData,
-  minCapacity: number,
-  maxCapacity: number,
-  desiredCapacity: number,
-  subnetType: ec2.SubnetType,
-  securityGroup: ec2.SecurityGroup,
-  keyName: string,
-  stage: STAGES,
-  construct: Construct
-): autoscaling.AutoScalingGroup => {
-  return new autoscaling.AutoScalingGroup(construct, `${asgId}-${stage}`, {
-    vpc,
-    instanceType,
-    machineImage,
-    userData,
-    minCapacity,
-    maxCapacity,
-    desiredCapacity,
-    vpcSubnets: { subnetType },
-    securityGroup,
-    keyName,
-    associatePublicIpAddress: true,
+  const keyPair = new CfnKeyPair(construct, `${keyPairName}-${stage}`, {
+    keyName: `${keyPairName}-${stage}`,
+  });
+
+  new Secret(construct, `${keyPairName}Secret-${stage}`, {
+    secretName: `ec2-ssh-key/${keyPairName}-${stage}`,
+    description: 'SSH key for EC2 instances',
+    encryptionKey: key,
+    generateSecretString: {
+      secretStringTemplate: JSON.stringify({ keyPairName: keyPair.keyName }),
+      generateStringKey: 'privateKey',
+      excludeCharacters: '/"',
+    },
+  });
+
+  return keyPair.keyName;
+};
+export const createDefaultAutoScalingGroup = (
+  construct: Construct,
+  props: AutoScalingGroupProps
+): AutoScalingGroup => {
+  const keyName =
+    props.keyName ?? createEC2KeyPair(construct, props.asgName, props.stage);
+
+  return new AutoScalingGroup(construct, `${props.asgName}-${props.stage}`, {
+    autoScalingGroupName: `${props.asgName}-${props.stage}`,
+    vpc: props.vpc,
+    instanceType: props.instanceType || DEFAULT_ASG_INSTANCE_TYPE,
+    machineImage: props.machineImage || DEFAULT_ASG_MACHINE_IMAGE,
+    userData: props.userData,
+    minCapacity: props.minCapacity ?? DEFAULT_ASG_MIN_CAPACITY,
+    maxCapacity: props.maxCapacity ?? DEFAULT_ASG_MAX_CAPACITY,
+    desiredCapacity: props.desiredCapacity ?? DEFAULT_ASG_DESIRED_CAPACITY,
+    vpcSubnets: { subnetType: props.subnetType || DEFAULT_ASG_SUBNET_TYPE },
+    securityGroup: props.securityGroup,
+    keyName: keyName,
+    associatePublicIpAddress: props.subnetType === SubnetType.PUBLIC,
   });
 };

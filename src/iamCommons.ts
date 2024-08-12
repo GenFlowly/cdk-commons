@@ -1,4 +1,13 @@
-import * as iam from 'aws-cdk-lib/aws-iam';
+import {
+  ManagedPolicy,
+  User,
+  Policy,
+  CfnAccessKey,
+  ServicePrincipal,
+  PolicyStatement,
+  Role,
+  IRole,
+} from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { MANAGED_POLICIES, STAGES } from './commonConstants';
@@ -7,32 +16,29 @@ export const createIAMUser = (
   userName: string,
   id: string,
   construct: Construct
-): iam.User => {
-  return new iam.User(construct, id, { userName });
+): User => {
+  return new User(construct, id, { userName });
 };
 
 export const attachManagedPolicyNameToUser = (
-  user: iam.User,
+  user: User,
   managedPolicyName: string
 ) => {
   user.addManagedPolicy(
-    iam.ManagedPolicy.fromAwsManagedPolicyName(managedPolicyName)
+    ManagedPolicy.fromAwsManagedPolicyName(managedPolicyName)
   );
 };
 
-export const attachCustomPolicyToUser = (
-  user: iam.User,
-  policy: iam.Policy
-) => {
+export const attachCustomPolicyToUser = (user: User, policy: Policy) => {
   user.attachInlinePolicy(policy);
 };
 
 export const createAccessKeyForUser = (
-  user: iam.User,
+  user: User,
   accessKeyId: string,
   construct: Construct
-): iam.CfnAccessKey => {
-  return new iam.CfnAccessKey(construct, accessKeyId, {
+): CfnAccessKey => {
+  return new CfnAccessKey(construct, accessKeyId, {
     userName: user.userName,
   });
 };
@@ -45,11 +51,11 @@ export const createIAMPolicy = (
   policyEffect: Effect,
   stage: STAGES,
   construct: Construct
-): iam.Policy => {
-  return new iam.Policy(construct, `${policyId}-${stage}`, {
+): Policy => {
+  return new Policy(construct, `${policyId}-${stage}`, {
     policyName: `${policyName}-${stage}`,
     statements: [
-      new iam.PolicyStatement({
+      new PolicyStatement({
         effect: policyEffect,
         actions: policyActions,
         resources: policyResources,
@@ -60,19 +66,19 @@ export const createIAMPolicy = (
 
 export const createIAMRole = (
   roleName: string,
-  servicePrincipal: iam.ServicePrincipal,
+  servicePrincipal: ServicePrincipal,
   stage: STAGES,
   construct: Construct
-): iam.Role => {
-  return new iam.Role(construct, `${roleName}-${stage}`, {
+): Role => {
+  return new Role(construct, `${roleName}-${stage}`, {
     roleName: `${roleName}-${stage}`,
     assumedBy: servicePrincipal,
   });
 };
 
 export const attachCustomPolicyStatementsToRole = (
-  role: iam.Role,
-  policyStatements: iam.PolicyStatement[]
+  role: Role,
+  policyStatements: PolicyStatement[]
 ) => {
   policyStatements.forEach((policyStatement) => {
     role.addToPolicy(policyStatement);
@@ -80,19 +86,19 @@ export const attachCustomPolicyStatementsToRole = (
 };
 
 export const attachManagedPolicyToRole = (
-  role: iam.IRole,
+  role: IRole,
   managedPolicyName: MANAGED_POLICIES
 ) => {
   role.addManagedPolicy(
-    iam.ManagedPolicy.fromAwsManagedPolicyName(managedPolicyName)
+    ManagedPolicy.fromAwsManagedPolicyName(managedPolicyName)
   );
 };
 
 export const createPolicyStatement = (
   policyActions: string[],
   policyResources: string[]
-): iam.PolicyStatement => {
-  return new iam.PolicyStatement({
+): PolicyStatement => {
+  return new PolicyStatement({
     actions: policyActions,
     resources: policyResources,
   });

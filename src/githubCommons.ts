@@ -1,6 +1,5 @@
 import { Construct } from 'constructs';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { Effect } from 'aws-cdk-lib/aws-iam';
+import { Policy, User, CfnAccessKey, Effect } from 'aws-cdk-lib/aws-iam';
 import {
   GITHUB_ACTIONS_ACTION_KEY,
   GITHUB_ACTIONS_IAM_USER,
@@ -15,7 +14,7 @@ import {
 
 export const createIAMPolicyForGitHubActions = (
   construct: Construct
-): iam.Policy => {
+): Policy => {
   return createIAMPolicy(
     'GitHubActionsPolicy',
     'GitHubActionsPolicy',
@@ -43,7 +42,7 @@ export const createIAMPolicyForGitHubActions = (
 export const createIAMUserForGitHubActions = (
   envName: string,
   construct: Construct
-): iam.User => {
+): User => {
   return createIAMUser(
     GITHUB_ACTIONS_IAM_USER,
     `${GITHUB_ACTIONS_IAM_USER}-${envName}`,
@@ -54,9 +53,9 @@ export const createIAMUserForGitHubActions = (
 export const setupGitHubActionsForCDKDeployment = (
   envName: string,
   construct: Construct
-): iam.CfnAccessKey => {
-  const ghPolicy: iam.Policy = createIAMPolicyForGitHubActions(construct);
-  const ghUser: iam.User = createIAMUserForGitHubActions(envName, construct);
+): CfnAccessKey => {
+  const ghPolicy: Policy = createIAMPolicyForGitHubActions(construct);
+  const ghUser: User = createIAMUserForGitHubActions(envName, construct);
   attachCustomPolicyToUser(ghUser, ghPolicy);
   return createAccessKeyForUser(
     ghUser,

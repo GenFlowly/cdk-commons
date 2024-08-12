@@ -1,8 +1,7 @@
 import { LAMBDA_MEMORY, LAMBDA_TIMEOUT, STAGES } from './commonConstants';
 import { Construct } from 'constructs';
-import { aws_lambda as lambda } from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as cdk from 'aws-cdk-lib';
+import { Duration, aws_lambda as lambda } from 'aws-cdk-lib';
+import { Role } from 'aws-cdk-lib/aws-iam';
 
 export const createLambda = (
   id: string,
@@ -12,7 +11,7 @@ export const createLambda = (
   handler: string,
   timeout: LAMBDA_TIMEOUT,
   memory: LAMBDA_MEMORY,
-  role: iam.Role,
+  role: Role,
   environmentVariables: { [key: string]: string },
   stage: STAGES,
   construct: Construct
@@ -22,7 +21,7 @@ export const createLambda = (
     runtime: runtime,
     code: lambda.Code.fromAsset(codeAssetFullPathWithFileName),
     handler: handler,
-    timeout: cdk.Duration.minutes(timeout),
+    timeout: Duration.minutes(timeout),
     memorySize: memory,
     role: role,
     environment: environmentVariables,

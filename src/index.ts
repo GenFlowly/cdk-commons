@@ -6,3 +6,5 @@ export * from './ec2Commons';
 export * from './githubCommons';
 export * from './iamCommons';
 export * from './lambdaCommons';
+export * from './s3Commons';
+export * from './loadBalancerCommons';

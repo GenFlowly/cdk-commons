@@ -17,12 +17,13 @@ import {
   DEFAULT_HEALTH_CHECK_INTERVAL,
   DEFAULT_HEALTH_CHECK_TIMEOUT,
 } from './commonConstants';
-
+import { ApplicationProtocol } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 export interface TargetGroupProps {
   name: string;
   port: number;
   targets: AutoScalingGroup[];
   healthCheckPath?: string;
+  protocol: ApplicationProtocol;
 }
 
 export interface LoadBalancerProps {
@@ -64,6 +65,7 @@ export const createLoadBalancerWithTargets = (
       port: tg.port,
       targets: tg.targets,
       targetGroupName: `${tg.name}-${props.stage}`.toLowerCase(),
+      protocol: tg.protocol,
       healthCheck: {
         path: tg.healthCheckPath ?? DEFAULT_HEALTH_CHECK_PATH,
         unhealthyThresholdCount: DEFAULT_UNHEALTHY_THRESHOLD_COUNT,

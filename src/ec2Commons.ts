@@ -28,6 +28,7 @@ import {
   DEFAULT_ASG_DESIRED_CAPACITY,
   DEFAULT_ASG_SUBNET_TYPE,
 } from './commonConstants';
+import { IRole } from 'aws-cdk-lib/aws-iam';
 import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
 
 export interface AutoScalingGroupProps {
@@ -43,6 +44,7 @@ export interface AutoScalingGroupProps {
   subnetType?: SubnetType;
   securityGroup?: SecurityGroup;
   keyName?: string;
+  role?: IRole;
 }
 
 export const createDefaultVpc = (
@@ -189,5 +191,6 @@ export const createDefaultAutoScalingGroup = (
     securityGroup: props.securityGroup,
     keyName: keyName,
     associatePublicIpAddress: props.subnetType === SubnetType.PUBLIC,
+    role: props.role,
   });
 };

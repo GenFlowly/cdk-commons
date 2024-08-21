@@ -158,9 +158,10 @@ export const createEC2KeyPair = (
     keyName: `${keyPairName}-${stage}`,
   });
 
-  new Secret(construct, `${keyPairName}Secret-${stage}`, { // why is this here ?
-    secretName: `ec2-ssh-key/${keyPairName}-${stage}`,
-    description: 'SSH key for EC2 instances',
+  new Secret(construct, `${keyPairName}Secret-${stage}`, {
+    // why is this here ?
+    secretName: `$$$-ssh-key/${keyPairName}-${stage}`,
+    description: '$$$', //why is this here // pass $$ name as a variable
     encryptionKey: key,
     generateSecretString: {
       secretStringTemplate: JSON.stringify({ keyPairName: keyPair.keyName }),

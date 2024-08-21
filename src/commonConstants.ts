@@ -71,8 +71,9 @@ export const DEFAULT_ASG_INSTANCE_TYPE = InstanceType.of(
 // 18 and 19
 
 //We are using the Canonical's AWS account ID for official Ubuntu AMI's
-export const DEFAULT_ASG_MACHINE_IMAGE = MachineImage.lookup({ // why is this here ? check line
-// 18 and 19
+export const DEFAULT_ASG_MACHINE_IMAGE = MachineImage.lookup({
+  // why is this here ? check line
+  // 18 and 19
   name: 'ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*',
   owners: ['099720109477'],
 });
@@ -90,7 +91,8 @@ export const DEFAULT_HEALTH_CHECK_PATH = '/';
 export const DEFAULT_UNHEALTHY_THRESHOLD_COUNT = 2; // why is this here ? what is unhealthy ?
 // give more descriptive name
 export const DEFAULT_HEALTHY_THRESHOLD_COUNT = 5; // why is this here ? what is healthy ?
-export const DEFAULT_HEALTH_CHECK_INTERVAL = Duration.seconds(30);
+export const DEFAULT_HEALTH_CHECK_INTERVAL = Duration.seconds(30); // why is this here ? what
+// health check
 export const DEFAULT_HEALTH_CHECK_TIMEOUT = Duration.seconds(5);
 
 export const DEFAULT_S3_REMOVAL_POLICY = RemovalPolicy.RETAIN;

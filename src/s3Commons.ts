@@ -53,7 +53,8 @@ export const deployToS3Bucket = (
   );
 };
 
-export const grantS3ReadAccess = ( // why is this here ? can you make it generic
+export const grantS3ReadAccess = (
+  // why is this here ? can you make it generic
   bucket: IBucket,
   grantee: IGrantable
 ): void => {

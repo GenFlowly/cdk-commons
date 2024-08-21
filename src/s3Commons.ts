@@ -1,6 +1,5 @@
 import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import { IGrantable } from 'aws-cdk-lib/aws-iam';
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
@@ -51,11 +50,4 @@ export const deployToS3Bucket = (
         props.destinationKeyPrefix ?? DEFAULT_S3_DESTINATION_KEY_PREFIX,
     }
   );
-};
-
-export const grantS3ReadAccess = (
-  bucket: IBucket,
-  grantee: IGrantable
-): void => {
-  bucket.grantRead(grantee);
 };

@@ -7,10 +7,15 @@ import {
   PolicyStatement,
   Role,
   IRole,
+  IGrantable,
 } from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { Effect } from 'aws-cdk-lib/aws-iam';
-import { MANAGED_POLICIES, STAGES } from './commonConstants';
+import {
+  MANAGED_POLICIES,
+  ResourceAccessLevel,
+  STAGES,
+} from './commonConstants';
 
 export const createIAMUser = (
   userName: string,
@@ -102,4 +107,27 @@ export const createPolicyStatement = (
     actions: policyActions,
     resources: policyResources,
   });
+};
+export const grantResourceAccess = (
+  resource: {
+    grantRead: (grantee: IGrantable) => void;
+    grantWrite: (grantee: IGrantable) => void;
+    grantReadWrite: (grantee: IGrantable) => void;
+  },
+  grantee: IGrantable,
+  accessLevel: ResourceAccessLevel
+): void => {
+  switch (accessLevel) {
+    case ResourceAccessLevel.READ:
+      resource.grantRead(grantee);
+      break;
+    case ResourceAccessLevel.WRITE:
+      resource.grantWrite(grantee);
+      break;
+    case ResourceAccessLevel.READ_WRITE:
+      resource.grantReadWrite(grantee);
+      break;
+    default:
+      throw new Error(`Unsupported access level: ${accessLevel}`);
+  }
 };

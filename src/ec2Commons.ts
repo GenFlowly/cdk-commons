@@ -1,7 +1,5 @@
 import {
-  IVpc,
   InstanceType,
-  IMachineImage,
   UserData,
   SubnetType,
   SecurityGroup,
@@ -12,40 +10,11 @@ import {
   GenericLinuxImage,
   CfnEIP,
   CfnEIPAssociation,
-  CfnKeyPair,
+  IMachineImage,
 } from 'aws-cdk-lib/aws-ec2';
-import { Key } from 'aws-cdk-lib/aws-kms';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
-import {
-  MANAGED_POLICIES,
-  STAGES,
-  DEFAULT_ASG_INSTANCE_TYPE,
-  DEFAULT_ASG_MACHINE_IMAGE,
-  DEFAULT_ASG_MIN_CAPACITY,
-  DEFAULT_ASG_MAX_CAPACITY,
-  DEFAULT_ASG_DESIRED_CAPACITY,
-  DEFAULT_ASG_SUBNET_TYPE,
-} from './commonConstants';
-import { IRole } from 'aws-cdk-lib/aws-iam';
-import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
-
-export interface AutoScalingGroupProps {
-  asgName: string;
-  vpc: IVpc;
-  stage: STAGES;
-  instanceType?: InstanceType;
-  machineImage?: IMachineImage;
-  userData?: UserData;
-  minCapacity?: number;
-  maxCapacity?: number;
-  desiredCapacity?: number;
-  subnetType?: SubnetType;
-  securityGroup?: SecurityGroup;
-  keyName?: string;
-  role?: IRole;
-}
+import { MANAGED_POLICIES, STAGES } from './commonConstants';
 
 export const createDefaultVpc = (
   vpcId: string,
@@ -97,6 +66,14 @@ export const createUserData = (commands: string[]): UserData => {
   userData.addCommands(...commands);
   return userData;
 };
+export const createGenericLinuxMachineImage = (
+  region: string,
+  amiId: string
+): IMachineImage => {
+  return new GenericLinuxImage({
+    [region]: amiId,
+  });
+};
 export const createDefaultEc2Instance = (
   ec2InstanceName: string,
   instanceType: string,
@@ -108,14 +85,15 @@ export const createDefaultEc2Instance = (
   stage: STAGES,
   construct: Construct
 ): Instance => {
-  const genericLinuxImage = new GenericLinuxImage({
-    [region]: machineImage,
-  });
+  const genericLinuxMachineImage = createGenericLinuxMachineImage(
+    region,
+    machineImage
+  );
   const userDataScript = UserData.custom(userDataContent);
   return new Instance(construct, `${ec2InstanceName}-${stage}`, {
     instanceType: new InstanceType(instanceType),
     instanceName: `${ec2InstanceName}-${stage}`,
-    machineImage: genericLinuxImage,
+    machineImage: genericLinuxMachineImage,
     vpc: vpc,
     securityGroup: securityGroup,
     userData: userDataScript,
@@ -144,53 +122,4 @@ export const attachSSMPolicyToEC2Instance = (instance: Instance) => {
     instance.role,
     MANAGED_POLICIES.SSM_MANAGED_INSTANCE_CORE
   );
-};
-export const createEC2KeyPair = (
-  construct: Construct,
-  keyPairName: string,
-  stage: STAGES
-): string => {
-  const key = new Key(construct, `${keyPairName}Key-${stage}`, {
-    enableKeyRotation: true,
-  });
-
-  const keyPair = new CfnKeyPair(construct, `${keyPairName}-${stage}`, {
-    keyName: `${keyPairName}-${stage}`,
-  });
-
-  new Secret(construct, `${keyPairName}Secret-${stage}`, {
-    secretName: `ec2-ssh-key/${keyPairName}-${stage}`,
-    description: 'SSH key for EC2 instances',
-    encryptionKey: key,
-    generateSecretString: {
-      secretStringTemplate: JSON.stringify({ keyPairName: keyPair.keyName }),
-      generateStringKey: 'privateKey',
-      excludeCharacters: '/"',
-    },
-  });
-
-  return keyPair.keyName;
-};
-export const createDefaultAutoScalingGroup = (
-  construct: Construct,
-  props: AutoScalingGroupProps
-): AutoScalingGroup => {
-  const keyName =
-    props.keyName ?? createEC2KeyPair(construct, props.asgName, props.stage);
-
-  return new AutoScalingGroup(construct, `${props.asgName}-${props.stage}`, {
-    autoScalingGroupName: `${props.asgName}-${props.stage}`,
-    vpc: props.vpc,
-    instanceType: props.instanceType || DEFAULT_ASG_INSTANCE_TYPE,
-    machineImage: props.machineImage || DEFAULT_ASG_MACHINE_IMAGE,
-    userData: props.userData,
-    minCapacity: props.minCapacity ?? DEFAULT_ASG_MIN_CAPACITY,
-    maxCapacity: props.maxCapacity ?? DEFAULT_ASG_MAX_CAPACITY,
-    desiredCapacity: props.desiredCapacity ?? DEFAULT_ASG_DESIRED_CAPACITY,
-    vpcSubnets: { subnetType: props.subnetType || DEFAULT_ASG_SUBNET_TYPE },
-    securityGroup: props.securityGroup,
-    keyName: keyName,
-    associatePublicIpAddress: props.subnetType === SubnetType.PUBLIC,
-    role: props.role,
-  });
 };

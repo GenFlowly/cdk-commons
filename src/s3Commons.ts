@@ -1,6 +1,6 @@
 import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import { IGrantable } from 'aws-cdk-lib/aws-iam';
+import { IGrantable } from 'aws-cdk-lib/aws-iam'; // why is this here ?
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
@@ -53,7 +53,7 @@ export const deployToS3Bucket = (
   );
 };
 
-export const grantS3ReadAccess = (
+export const grantS3ReadAccess = ( // why is this here ? can you make it generic
   bucket: IBucket,
   grantee: IGrantable
 ): void => {

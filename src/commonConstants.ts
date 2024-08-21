@@ -67,24 +67,29 @@ export enum LAMBDA_MEMORY {
 export const DEFAULT_ASG_INSTANCE_TYPE = InstanceType.of(
   InstanceClass.T3,
   InstanceSize.MICRO
-);
+); // why is this here ? check line
+// 18 and 19
+
 //We are using the Canonical's AWS account ID for official Ubuntu AMI's
-export const DEFAULT_ASG_MACHINE_IMAGE = MachineImage.lookup({
+export const DEFAULT_ASG_MACHINE_IMAGE = MachineImage.lookup({ // why is this here ? check line
+// 18 and 19
   name: 'ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*',
   owners: ['099720109477'],
 });
 export const DEFAULT_ASG_MIN_CAPACITY = 1;
 export const DEFAULT_ASG_MAX_CAPACITY = 2;
-export const DEFAULT_ASG_DESIRED_CAPACITY = 1;
-export const DEFAULT_ASG_SUBNET_TYPE = SubnetType.PRIVATE_WITH_NAT;
+export const DEFAULT_ASG_DESIRED_CAPACITY = 1; // why is this here ? can you make enum ?
+export const DEFAULT_ASG_SUBNET_TYPE = SubnetType.PRIVATE_WITH_NAT; // why is this here ? its
+// deprecated
 
 export const DEFAULT_LB_SCHEME: ApplicationLoadBalancerProps['internetFacing'] =
   true;
-export const DEFAULT_LB_LISTENER_PORT = 80;
-export const DEFAULT_TARGET_PORT = 80;
+export const DEFAULT_LB_LISTENER_PORT = 80; // why is this here ? check line 11
+export const DEFAULT_TARGET_PORT = 80; // why is this here ? check line 11
 export const DEFAULT_HEALTH_CHECK_PATH = '/';
-export const DEFAULT_UNHEALTHY_THRESHOLD_COUNT = 2;
-export const DEFAULT_HEALTHY_THRESHOLD_COUNT = 5;
+export const DEFAULT_UNHEALTHY_THRESHOLD_COUNT = 2; // why is this here ? what is unhealthy ?
+// give more descriptive name
+export const DEFAULT_HEALTHY_THRESHOLD_COUNT = 5; // why is this here ? what is healthy ?
 export const DEFAULT_HEALTH_CHECK_INTERVAL = Duration.seconds(30);
 export const DEFAULT_HEALTH_CHECK_TIMEOUT = Duration.seconds(5);
 

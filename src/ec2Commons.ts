@@ -14,8 +14,8 @@ import {
   CfnEIPAssociation,
   CfnKeyPair,
 } from 'aws-cdk-lib/aws-ec2';
-import { Key } from 'aws-cdk-lib/aws-kms';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import { Key } from 'aws-cdk-lib/aws-kms'; // why is this here ?
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager'; // why is this here ?
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
 import {
@@ -158,7 +158,7 @@ export const createEC2KeyPair = (
     keyName: `${keyPairName}-${stage}`,
   });
 
-  new Secret(construct, `${keyPairName}Secret-${stage}`, {
+  new Secret(construct, `${keyPairName}Secret-${stage}`, { // why is this here ?
     secretName: `ec2-ssh-key/${keyPairName}-${stage}`,
     description: 'SSH key for EC2 instances',
     encryptionKey: key,
@@ -189,7 +189,7 @@ export const createDefaultAutoScalingGroup = (
     desiredCapacity: props.desiredCapacity ?? DEFAULT_ASG_DESIRED_CAPACITY,
     vpcSubnets: { subnetType: props.subnetType || DEFAULT_ASG_SUBNET_TYPE },
     securityGroup: props.securityGroup,
-    keyName: keyName,
+    keyName: keyName, // why is this here ? its deprecated
     associatePublicIpAddress: props.subnetType === SubnetType.PUBLIC,
     role: props.role,
   });

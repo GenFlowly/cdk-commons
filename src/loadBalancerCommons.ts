@@ -5,7 +5,7 @@ import {
   ListenerAction,
 } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { IVpc } from 'aws-cdk-lib/aws-ec2';
-import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
+import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling'; // why is this here ?
 import { Construct } from 'constructs';
 import {
   STAGES,
@@ -43,7 +43,7 @@ export const createLoadBalancerWithTargets = (
   listener: ApplicationListener;
   targetGroups: ApplicationTargetGroup[];
 } => {
-  // Create Load Balancer
+  // Create Load Balancer // why is this here ? unnecessary comments
   const lb = new ApplicationLoadBalancer(
     construct,
     `${props.lbName}-${props.stage}`,
@@ -54,15 +54,15 @@ export const createLoadBalancerWithTargets = (
     }
   );
 
-  // Add Listener
+  // Add Listener // why is this here ? unnecessary comments
   const listener = lb.addListener(`${props.lbName}Listener-${props.stage}`, {
     port: props.listenerPort ?? DEFAULT_LB_LISTENER_PORT,
   });
 
-  // Create Target Groups
+  // Create Target Groups // why is this here ? unnecessary comments
   const targetGroups = props.targetGroups.map((tg) => {
     return listener.addTargets(`${tg.name}-${props.stage}`, {
-      port: tg.port,
+      port: tg.port, // why is this here ? tg  should be targetGroup
       targets: tg.targets,
       targetGroupName: `${tg.name}-${props.stage}`.toLowerCase(),
       protocol: tg.protocol,

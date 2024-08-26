@@ -7,14 +7,18 @@ import {
   Port,
   Peer,
   Instance,
-  GenericLinuxImage,
   CfnEIP,
   CfnEIPAssociation,
-  IMachineImage,
+  MachineImage,
 } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
-import { MANAGED_POLICIES, STAGES } from './commonConstants';
+import {
+  MANAGED_POLICIES,
+  STAGES,
+  UBUNTU_AMI_NAME_PATTERN,
+  UBUNTU_AMI_OWNER,
+} from './commonConstants';
 
 export const createDefaultVpc = (
   vpcId: string,
@@ -66,29 +70,19 @@ export const createUserData = (commands: string[]): UserData => {
   userData.addCommands(...commands);
   return userData;
 };
-export const createGenericLinuxMachineImage = (
-  region: string,
-  amiId: string
-): IMachineImage => {
-  return new GenericLinuxImage({
-    [region]: amiId,
-  });
-};
 export const createDefaultEc2Instance = (
   ec2InstanceName: string,
   instanceType: string,
-  machineImage: string,
   vpc: Vpc,
   securityGroup: SecurityGroup,
   userDataContent: string,
-  region: string,
   stage: STAGES,
   construct: Construct
 ): Instance => {
-  const genericLinuxMachineImage = createGenericLinuxMachineImage(
-    region,
-    machineImage
-  );
+  const genericLinuxMachineImage = MachineImage.lookup({
+    name: UBUNTU_AMI_NAME_PATTERN,
+    owners: [UBUNTU_AMI_OWNER],
+  });
   const userDataScript = UserData.custom(userDataContent);
   return new Instance(construct, `${ec2InstanceName}-${stage}`, {
     instanceType: new InstanceType(instanceType),

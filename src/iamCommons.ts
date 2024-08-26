@@ -89,6 +89,14 @@ export const attachCustomPolicyStatementsToRole = (
     role.addToPolicy(policyStatement);
   });
 };
+export const attachCustomPolicyStatementsToPrincipalPolicy = (
+  role: IRole,
+  policyStatements: PolicyStatement[]
+) => {
+  policyStatements.forEach((policyStatement) => {
+    role.addToPrincipalPolicy(policyStatement);
+  });
+};
 
 export const attachManagedPolicyToRole = (
   role: IRole,
@@ -101,9 +109,11 @@ export const attachManagedPolicyToRole = (
 
 export const createPolicyStatement = (
   policyActions: string[],
-  policyResources: string[]
+  policyResources: string[],
+  effect?: Effect
 ): PolicyStatement => {
   return new PolicyStatement({
+    effect: effect,
     actions: policyActions,
     resources: policyResources,
   });

@@ -14,7 +14,11 @@ export const ALLOWED_LDAP_PORT: number = 389;
 export const GITHUB_ACTIONS_IAM_USER: string = 'GitHubActions';
 export const GITHUB_ACTIONS_ACTION_KEY: string = 'GitHubActionsActionKey';
 export const T2_NANO: string = 't2.nano';
-export const UBUNTU_64_X86_AMI: string = 'ami-007855ac798b5175e';
+// Reference: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ec2.LookupMachineImage.html
+//Reference:  https://documentation.ubuntu.com/aws/en/latest/aws-how-to/instances/find-ubuntu-images/
+export const UBUNTU_AMI_NAME_PATTERN: string =
+  'ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*';
+export const UBUNTU_AMI_OWNER: string = '099720109477';
 
 export enum HTTP_METHODS {
   GET = 'GET',
@@ -42,6 +46,8 @@ export enum HTTP_STATUS_CODES {
 export enum MANAGED_POLICIES {
   STEP_FUNCTIONS_READ_ONLY = 'AWSStepFunctionsReadOnlyAccess',
   SSM_MANAGED_INSTANCE_CORE = 'AmazonSSMManagedInstanceCore',
+  AmazonDynamoDBFullAccess = 'AmazonDynamoDBFullAccess',
+  SecretsManagerReadWrite = 'SecretsManagerReadWrite',
 }
 
 export enum STAGES {

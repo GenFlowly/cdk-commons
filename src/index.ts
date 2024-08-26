@@ -10,3 +10,4 @@ export * from './s3Commons';
 export * from './loadBalancerCommons';
 export * from './autoScalingGroupCommons';
 export * from './certificateCommons';
+export * from './dynamoDbCommons';

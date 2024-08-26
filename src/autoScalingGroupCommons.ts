@@ -6,6 +6,7 @@ import {
   UserData,
   SubnetType,
   SecurityGroup,
+  MachineImage,
 } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
@@ -15,11 +16,10 @@ import {
   DEFAULT_ASG_INSTANCE_TYPE,
   ASG_CAPACITY,
   DEFAULT_ASG_SUBNET_TYPE,
-  DEFAULT_REGION,
-  UBUNTU_64_X86_AMI,
+  UBUNTU_AMI_NAME_PATTERN,
+  UBUNTU_AMI_OWNER,
 } from './commonConstants';
 import { IRole } from 'aws-cdk-lib/aws-iam';
-import { createGenericLinuxMachineImage } from './ec2Commons';
 
 export interface AutoScalingGroupProps {
   asgName: string;
@@ -41,10 +41,10 @@ export const createDefaultAutoScalingGroup = (
   construct: Construct,
   props: AutoScalingGroupProps
 ): AutoScalingGroup => {
-  const machineImage = createGenericLinuxMachineImage(
-    DEFAULT_REGION,
-    UBUNTU_64_X86_AMI
-  );
+  const genericLinuxMachineImage = MachineImage.lookup({
+    name: UBUNTU_AMI_NAME_PATTERN,
+    owners: [UBUNTU_AMI_OWNER],
+  });
   const asg = new AutoScalingGroup(
     construct,
     `${props.asgName}-${props.stage}`,
@@ -52,7 +52,7 @@ export const createDefaultAutoScalingGroup = (
       autoScalingGroupName: `${props.asgName}-${props.stage}`,
       vpc: props.vpc,
       instanceType: props.instanceType || DEFAULT_ASG_INSTANCE_TYPE,
-      machineImage: props.machineImage || machineImage,
+      machineImage: props.machineImage || genericLinuxMachineImage,
       userData: props.userData,
       minCapacity: props.minCapacity ?? ASG_CAPACITY.MIN,
       maxCapacity: props.maxCapacity ?? ASG_CAPACITY.MAX,

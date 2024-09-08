@@ -28,8 +28,8 @@ export const createS3Bucket = (
   construct: Construct,
   props: S3BucketProps
 ): Bucket => {
-  return new Bucket(construct, `${props.bucketName}-${props.stage}`, {
-    bucketName: `${props.bucketName}-${props.stage}`.toLowerCase(), // S3 buckets must be lowercase
+  return new Bucket(construct, `${props.bucketName}${DEFAULT_DELIMITER}${props.stage}`, {
+    bucketName: `${props.bucketName}${DEFAULT_DELIMITER}${props.stage}`.toLowerCase(), // S3 buckets must be lowercase
     removalPolicy: props.removalPolicy ?? DEFAULT_S3_REMOVAL_POLICY,
     autoDeleteObjects:
       props.autoDeleteObjects ?? DEFAULT_S3_AUTO_DELETE_OBJECTS,
@@ -42,7 +42,7 @@ export const deployToS3Bucket = (
 ): BucketDeployment => {
   return new BucketDeployment(
     construct,
-    `${props.deploymentName}-${props.stage}`,
+    `${props.deploymentName}${DEFAULT_DELIMITER}${props.stage}`,
     {
       sources: [Source.asset(props.sourcePath)],
       destinationBucket: props.destinationBucket,
@@ -54,7 +54,8 @@ export const deployToS3Bucket = (
 
 export const getS3Bucket = (
   construct: Construct,
-  bucket_name: string
+  bucket_name: string,
+  stage: STAGES
 ) => {
-  Bucket.fromBucketName(construct, `${bucket_name}${DEFAULT_DELIMITER}id`, bucket_name);
+  return Bucket.fromBucketName(construct, `${bucket_name}${DEFAULT_DELIMITER}${stage}${DEFAULT_DELIMITER}id`, `${bucket_name}${DEFAULT_DELIMITER}${stage}`);
 }

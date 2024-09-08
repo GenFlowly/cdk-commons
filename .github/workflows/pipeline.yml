@@ -75,4 +75,4 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: CDK Deploy Beta
-        run: npx cdk deploy --all --context env=development --require-approval never
+        run: npx cdk deploy --all --context env=development --require-approval never --app "npx ts-node bin/cdk.ts"

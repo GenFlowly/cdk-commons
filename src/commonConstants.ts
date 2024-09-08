@@ -10,6 +10,7 @@ import { RemovalPolicy } from 'aws-cdk-lib';
 export const ALLOWED_HTTP_PORT: number = 80;
 export const ALLOWED_HTTPS_PORT: number = 443;
 export const ALLOWED_LDAP_PORT: number = 389;
+export const ALLOWED_SSH_PORT: number = 22;
 
 export const GITHUB_ACTIONS_IAM_USER: string = 'GitHubActions';
 export const GITHUB_ACTIONS_ACTION_KEY: string = 'GitHubActionsActionKey';
@@ -68,8 +69,8 @@ export enum LAMBDA_MEMORY {
   LAMBDA_MEMORY_MAX = 256,
 }
 export const DEFAULT_ASG_INSTANCE_TYPE = InstanceType.of(
-  InstanceClass.T3,
-  InstanceSize.MICRO
+  InstanceClass.T2,
+  InstanceSize.NANO
 );
 export const DEFAULT_REGION = 'us-east-1';
 export enum ASG_CAPACITY {
@@ -97,3 +98,7 @@ export const DEFAULT_LOAD_BALANCER_HEALTH_CHECK_TIMEOUT = 5;
 export const DEFAULT_S3_REMOVAL_POLICY = RemovalPolicy.RETAIN;
 export const DEFAULT_S3_AUTO_DELETE_OBJECTS = false;
 export const DEFAULT_S3_DESTINATION_KEY_PREFIX = '';
+
+export const ARTIFACTORY_BUCKET: string = 'artifactory-bucket';
+
+export const DEFAULT_DELIMITER: string = '-';

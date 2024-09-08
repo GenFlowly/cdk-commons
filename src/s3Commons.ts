@@ -6,7 +6,7 @@ import {
   STAGES,
   DEFAULT_S3_REMOVAL_POLICY,
   DEFAULT_S3_AUTO_DELETE_OBJECTS,
-  DEFAULT_S3_DESTINATION_KEY_PREFIX,
+  DEFAULT_S3_DESTINATION_KEY_PREFIX, DEFAULT_DELIMITER,
 } from './commonConstants';
 
 export interface S3BucketProps {
@@ -51,3 +51,10 @@ export const deployToS3Bucket = (
     }
   );
 };
+
+export const getS3Bucket = (
+  construct: Construct,
+  bucket_name: String
+) => {
+  Bucket.fromBucketName(this, `${bucket_name}${DEFAULT_DELIMITER}id`, bucket_name);
+}

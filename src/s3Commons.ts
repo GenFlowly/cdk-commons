@@ -54,7 +54,7 @@ export const deployToS3Bucket = (
 
 export const getS3Bucket = (
   construct: Construct,
-  bucket_name: String
+  bucket_name: string
 ) => {
-  Bucket.fromBucketName(this, `${bucket_name}${DEFAULT_DELIMITER}id`, bucket_name);
+  Bucket.fromBucketName(construct, `${bucket_name}${DEFAULT_DELIMITER}id`, bucket_name);
 }

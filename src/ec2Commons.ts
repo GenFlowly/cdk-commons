@@ -119,6 +119,7 @@ export const createIpv6Ec2Instance = (
     machineImage: genericLinuxMachineImage,
     vpc: vpc,
     userData: userDataScript,
+    associatePublicIpAddress: false
   });
   instance.connections.allowFrom(Peer.anyIpv4(), Port.tcp(ALLOWED_SSH_PORT));
   instance.connections.allowFrom(Peer.anyIpv6(), Port.tcp(ALLOWED_SSH_PORT));

@@ -14,11 +14,38 @@ import {
 import { Construct } from 'constructs';
 import { attachManagedPolicyToRole } from './iamCommons';
 import {
+  ALLOWED_SSH_PORT,
+  DEFAULT_DELIMITER,
   MANAGED_POLICIES,
   STAGES,
   UBUNTU_AMI_NAME_PATTERN,
   UBUNTU_AMI_OWNER,
 } from './commonConstants';
+import { Ipv6Vpc } from './Ipv6Vpc';
+import { Ipv6Instance } from './Ipv6Instance';
+
+export const createIpv6Vpc = (
+    vpcId: string,
+    vpcName: string,
+    maxAzs: number,
+    construct: Construct,
+    stage: STAGES,
+    isPublic: boolean = true
+): Vpc => {
+  return new Ipv6Vpc(construct, `${vpcId}`, {
+    vpcName: `${vpcName}-${stage}`,
+    maxAzs: maxAzs,
+    subnetConfiguration: [
+      {
+        name: `${vpcName}-${stage}-SubnetConfig`,
+        subnetType: isPublic
+            ? SubnetType.PUBLIC
+            : SubnetType.PRIVATE_WITH_EGRESS,
+        // This determines whether EC2 instance will have access to public internet or not
+      },
+    ],
+  });
+};
 
 export const createDefaultVpc = (
   vpcId: string,
@@ -70,6 +97,38 @@ export const createUserData = (commands: string[]): UserData => {
   userData.addCommands(...commands);
   return userData;
 };
+
+
+export const createIpv6Ec2Instance = (
+    ec2InstanceName: string,
+    instanceType: string,
+    vpc: Vpc,
+    securityGroup: SecurityGroup,
+    userDataContent: string,
+    stage: STAGES,
+    construct: Construct
+): Instance => {
+  const genericLinuxMachineImage = MachineImage.lookup({
+    name: UBUNTU_AMI_NAME_PATTERN,
+    owners: [UBUNTU_AMI_OWNER],
+  });
+  const userDataScript = UserData.custom(userDataContent);
+
+  const instance = new Ipv6Instance(construct, `${ec2InstanceName}-${stage}`, {
+    instanceType: new InstanceType(instanceType),
+    instanceName: `${ec2InstanceName}-${stage}`,
+    machineImage: genericLinuxMachineImage,
+    vpc: vpc,
+    securityGroup: securityGroup,
+    userData: userDataScript,
+  });
+  instance.connections.allowFrom(Peer.anyIpv4(), Port.tcp(ALLOWED_SSH_PORT));
+  instance.connections.allowFrom(Peer.anyIpv6(), Port.tcp(ALLOWED_SSH_PORT));
+
+  return instance;
+};
+
+
 export const createDefaultEc2Instance = (
   ec2InstanceName: string,
   instanceType: string,
@@ -100,12 +159,29 @@ export const createAndAssignDefaultElasticIp = (
   stage: STAGES,
   construct: Construct
 ) => {
-  const eip = new CfnEIP(construct, `${eipName}`);
-  new CfnEIPAssociation(construct, `${eipName}-${stage}-EIPAssociation`, {
-    eip: eip.ref,
+  const eip = createElasticIp(eipName, stage, construct);
+  createElasticIpAssociation(eip.ref, ec2Instance, stage, construct);
+};
+
+export const createElasticIp = (
+    eipName: string,
+    stage: STAGES,
+    construct: Construct
+) => {
+  return new CfnEIP(construct, `${eipName}${DEFAULT_DELIMITER}${stage}`);
+};
+
+export const createElasticIpAssociation = (
+    allocationName: string,
+    ec2Instance: Instance,
+    stage: STAGES,
+    construct: Construct
+) => {
+  new CfnEIPAssociation(construct, `${allocationName}${DEFAULT_DELIMITER}${stage}${DEFAULT_DELIMITER}EIPAssociation`, {
+    eip: allocationName,
     instanceId: ec2Instance.instanceId,
   });
-};
+}
 
 /**
  * Method to allow ssh into EC2 instances by attaching Session Manager Policy

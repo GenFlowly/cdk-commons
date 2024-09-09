@@ -103,7 +103,6 @@ export const createIpv6Ec2Instance = (
     ec2InstanceName: string,
     instanceType: string,
     vpc: Vpc,
-    securityGroup: SecurityGroup,
     userDataContent: string,
     stage: STAGES,
     construct: Construct
@@ -119,7 +118,6 @@ export const createIpv6Ec2Instance = (
     instanceName: `${ec2InstanceName}-${stage}`,
     machineImage: genericLinuxMachineImage,
     vpc: vpc,
-    securityGroup: securityGroup,
     userData: userDataScript,
   });
   instance.connections.allowFrom(Peer.anyIpv4(), Port.tcp(ALLOWED_SSH_PORT));

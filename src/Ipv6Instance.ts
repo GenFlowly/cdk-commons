@@ -10,7 +10,8 @@ export class Ipv6Instance extends Instance {
     constructor(scope: Construct, id: string, props: InstanceProps) {
         const securityGroup = props.securityGroup
             ? undefined
-            : new SecurityGroup(scope, `${id}:InstanceSecurityGroup`, {
+            : new SecurityGroup(scope, `${id}:IPv6SecurityGroup`, {
+                securityGroupName: `${id}:IPv6SecurityGroup`,
                 vpc: props.vpc,
                 allowAllOutbound: true,
                 allowAllIpv6Outbound: true,

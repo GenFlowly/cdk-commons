@@ -166,8 +166,8 @@ export const createAndAssignDefaultElasticIp = (
     ec2Instance: Instance,
     stage: STAGES,
 ) => {
-    const eip = createElasticIp(eipName, stage, construct);
-    createElasticIpAssociation(eip.ref, ec2Instance, stage, construct);
+    const eip = createElasticIp(construct, eipName, stage);
+    createElasticIpAssociation(construct, eip.ref, ec2Instance, stage);
 };
 
 export const createElasticIp = (

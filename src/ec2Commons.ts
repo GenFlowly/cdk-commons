@@ -9,7 +9,7 @@ import {
     Instance,
     CfnEIP,
     CfnEIPAssociation,
-    MachineImage,
+    MachineImage, GenericLinuxImage,
 } from 'aws-cdk-lib/aws-ec2';
 import {Construct} from 'constructs';
 import {attachManagedPolicyToRole} from './iamCommons';
@@ -145,15 +145,14 @@ export const createDefaultEc2Instance = (
     userDataContent: string,
     stage: STAGES
 ): Instance => {
-    const genericLinuxMachineImage = MachineImage.lookup({
-        name: UBUNTU_AMI_NAME_PATTERN,
-        owners: [UBUNTU_AMI_OWNER],
-    });
+    const ubuntuMachineImage = MachineImage.fromSsmParameter(
+        '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id'
+    );
     const userDataScript = UserData.custom(userDataContent);
     return new Instance(construct, `${ec2InstanceName}-${stage}`, {
         instanceType: new InstanceType(instanceType),
         instanceName: `${ec2InstanceName}-${stage}`,
-        machineImage: genericLinuxMachineImage,
+        machineImage: ubuntuMachineImage,
         vpc: vpc,
         securityGroup: securityGroup,
         userData: userDataScript,

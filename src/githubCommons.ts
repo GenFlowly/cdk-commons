@@ -31,6 +31,18 @@ export const createIAMPolicyForGitHubActions = (
       'ssm:GetParameter',
       'cloudformation:GetTemplate',
       'sts:assumeRole',
+      'ecr:GetAuthorizationToken',
+      'ecr:BatchCheckLayerAvailability',
+      'ecr:PutImage',
+      'ecr:InitiateLayerUpload',
+      'ecr:UploadLayerPart',
+      'ecr:CompleteLayerUpload',
+      'ecr:DescribeRepositories',
+      'ecr:CreateRepository',
+      'ecs:RegisterTaskDefinition',
+      'ecs:DescribeTaskDefinition',
+      'ecs:UpdateService',
+      'ecs:DescribeServices',
     ],
     ['*'],
     Effect.ALLOW,
@@ -40,7 +52,7 @@ export const createIAMPolicyForGitHubActions = (
 };
 
 export const createIAMUserForGitHubActions = (
-  envName: string,
+  envName: string, // envName = stage-region
   construct: Construct
 ): User => {
   return createIAMUser(
@@ -51,7 +63,7 @@ export const createIAMUserForGitHubActions = (
 };
 
 export const setupGitHubActionsForCDKDeployment = (
-  envName: string,
+  envName: string, // envName = stage-region
   construct: Construct
 ): CfnAccessKey => {
   const ghPolicy: Policy = createIAMPolicyForGitHubActions(construct);

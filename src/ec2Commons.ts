@@ -9,7 +9,7 @@ import {
     Instance,
     CfnEIP,
     CfnEIPAssociation,
-    MachineImage, GenericLinuxImage,
+    MachineImage,
 } from 'aws-cdk-lib/aws-ec2';
 import {Construct} from 'constructs';
 import {attachManagedPolicyToRole} from './iamCommons';
@@ -17,9 +17,7 @@ import {
     ALLOWED_SSH_PORT,
     DEFAULT_DELIMITER,
     MANAGED_POLICIES,
-    STAGES,
-    UBUNTU_AMI_NAME_PATTERN,
-    UBUNTU_AMI_OWNER,
+    STAGES
 } from './commonConstants';
 import {Ipv6Vpc} from './Ipv6Vpc';
 import {Ipv6Instance} from './Ipv6Instance';
@@ -61,6 +59,7 @@ export const createDefaultVpc = (
         subnetConfiguration: [
             {
                 name: `${vpcName}-${stage}-SubnetConfig`,
+                mapPublicIpOnLaunch: isPublic,
                 subnetType: isPublic
                     ? SubnetType.PUBLIC
                     : SubnetType.PRIVATE_WITH_EGRESS,

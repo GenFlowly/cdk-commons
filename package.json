@@ -1,6 +1,6 @@
 {
   "name": "@genflowly/cdk-commons",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -22,7 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^20.11.5",
-    "aws-cdk-lib": "^2.122.0",
+    "aws-cdk-lib": "2.189.1",
     "constructs": "^10.3.0",
     "typescript": "^5.3.3"
   },
